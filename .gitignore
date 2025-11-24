@@ -55,3 +55,7 @@ htmlcov/
 
 # Project specific
 *.db-journal
+
+# Logs
+logs/
+*.log

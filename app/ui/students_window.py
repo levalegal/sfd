@@ -3,6 +3,11 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
                              QLineEdit, QComboBox, QMessageBox, QLabel)
 from PyQt6.QtCore import Qt
 from app.models import StudentModel
+from app.utils.logger import setup_logger
+from app.utils.export import export_students_to_csv
+from PyQt6.QtWidgets import QFileDialog
+
+logger = setup_logger('students_window')
 
 
 class StudentDialog(QDialog):
@@ -78,11 +83,17 @@ class StudentDialog(QDialog):
         try:
             if self.student_id:
                 self.model.update(self.student_id, surname, name, patronymic, gender, phone, email, group)
+                logger.info(f"Обновлен студент ID: {self.student_id}")
             else:
-                self.model.create(surname, name, patronymic, gender, phone, email, group)
+                student_id = self.model.create(surname, name, patronymic, gender, phone, email, group)
+                logger.info(f"Создан студент ID: {student_id}")
             self.accept()
+        except ValueError as e:
+            logger.warning(f"Ошибка валидации: {e}")
+            QMessageBox.warning(self, 'Ошибка валидации', str(e))
         except Exception as e:
-            QMessageBox.critical(self, 'Ошибка', str(e))
+            logger.error(f"Ошибка сохранения студента: {e}")
+            QMessageBox.critical(self, 'Ошибка', f'Ошибка сохранения: {str(e)}')
 
 
 class StudentsWindow(QWidget):
@@ -98,22 +109,34 @@ class StudentsWindow(QWidget):
         
         layout = QVBoxLayout()
         
+        # Поиск
+        search_layout = QHBoxLayout()
+        search_label = QLabel('Поиск:')
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText('Введите фамилию, имя или группу...')
+        self.search_edit.textChanged.connect(self.filter_data)
+        search_layout.addWidget(search_label)
+        search_layout.addWidget(self.search_edit)
+        
         # Кнопки управления
         buttons_layout = QHBoxLayout()
         self.add_btn = QPushButton('Добавить')
         self.edit_btn = QPushButton('Редактировать')
         self.delete_btn = QPushButton('Удалить')
+        self.export_btn = QPushButton('Экспорт в CSV')
         self.refresh_btn = QPushButton('Обновить')
         
         self.add_btn.clicked.connect(self.add_student)
         self.edit_btn.clicked.connect(self.edit_student)
         self.delete_btn.clicked.connect(self.delete_student)
+        self.export_btn.clicked.connect(self.export_data)
         self.refresh_btn.clicked.connect(self.load_data)
         
         buttons_layout.addWidget(self.add_btn)
         buttons_layout.addWidget(self.edit_btn)
         buttons_layout.addWidget(self.delete_btn)
         buttons_layout.addStretch()
+        buttons_layout.addWidget(self.export_btn)
         buttons_layout.addWidget(self.refresh_btn)
         
         # Таблица
@@ -124,22 +147,55 @@ class StudentsWindow(QWidget):
         ])
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.table.setAlternatingRowColors(True)
+        self.table.setSortingEnabled(True)
         
+        # Статус
+        self.status_label = QLabel('Всего студентов: 0')
+        
+        layout.addLayout(search_layout)
         layout.addLayout(buttons_layout)
         layout.addWidget(self.table)
+        layout.addWidget(self.status_label)
         self.setLayout(layout)
     
     def load_data(self):
-        students = self.model.get_all()
-        self.table.setRowCount(len(students))
+        try:
+            students = self.model.get_all()
+            self.all_students = students
+            self.filter_data()
+            logger.info(f"Загружено {len(students)} студентов")
+        except Exception as e:
+            logger.error(f"Ошибка загрузки данных: {e}")
+            QMessageBox.critical(self, 'Ошибка', f'Ошибка загрузки данных: {str(e)}')
+    
+    def filter_data(self):
+        """Фильтрация данных по поисковому запросу"""
+        if not hasattr(self, 'all_students'):
+            return
         
-        for row, student in enumerate(students):
+        search_text = self.search_edit.text().lower().strip()
+        
+        if search_text:
+            filtered = [
+                s for s in self.all_students
+                if (search_text in str(s[1]).lower() or  # фамилия
+                    search_text in str(s[2]).lower() or  # имя
+                    search_text in str(s[7]).lower())    # группа
+            ]
+        else:
+            filtered = self.all_students
+        
+        self.table.setRowCount(len(filtered))
+        
+        for row, student in enumerate(filtered):
             for col, value in enumerate(student):
                 item = QTableWidgetItem(str(value) if value is not None else '')
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.table.setItem(row, col, item)
         
         self.table.resizeColumnsToContents()
+        self.status_label.setText(f'Всего студентов: {len(filtered)} / {len(self.all_students)}')
     
     def add_student(self):
         dialog = StudentDialog(self)
@@ -174,8 +230,31 @@ class StudentsWindow(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             try:
                 self.model.delete(student_id)
+                logger.info(f"Удален студент ID: {student_id}")
                 self.load_data()
                 QMessageBox.information(self, 'Успех', 'Студент удален')
             except ValueError as e:
+                logger.warning(f"Нельзя удалить студента ID {student_id}: {e}")
                 QMessageBox.warning(self, 'Ошибка', str(e))
+            except Exception as e:
+                logger.error(f"Ошибка удаления студента: {e}")
+                QMessageBox.critical(self, 'Ошибка', f'Ошибка удаления: {str(e)}')
+    
+    def export_data(self):
+        """Экспорт данных в CSV"""
+        if not hasattr(self, 'all_students') or not self.all_students:
+            QMessageBox.warning(self, 'Предупреждение', 'Нет данных для экспорта')
+            return
+        
+        filename, _ = QFileDialog.getSaveFileName(
+            self, 'Сохранить как CSV', 'students_export.csv', 'CSV Files (*.csv)'
+        )
+        
+        if filename:
+            try:
+                export_students_to_csv(self.all_students, filename)
+                QMessageBox.information(self, 'Успех', f'Данные экспортированы в {filename}')
+            except Exception as e:
+                logger.error(f"Ошибка экспорта: {e}")
+                QMessageBox.critical(self, 'Ошибка', f'Ошибка экспорта: {str(e)}')
 

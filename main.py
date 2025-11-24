@@ -11,6 +11,10 @@ from app.ui.buildings_window import BuildingsWindow
 from app.ui.rooms_window import RoomsWindow
 from app.ui.checkin_window import CheckinWindow
 from app.ui.checkout_window import CheckoutWindow
+from app.utils.styles import APP_STYLE
+from app.utils.logger import setup_logger
+
+logger = setup_logger('main')
 
 
 class MainWindow(QMainWindow):
@@ -103,10 +107,20 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    try:
+        app = QApplication(sys.argv)
+        app.setStyleSheet(APP_STYLE)
+        
+        logger.info("Запуск приложения")
+        window = MainWindow()
+        window.show()
+        
+        logger.info("Приложение успешно запущено")
+        sys.exit(app.exec())
+    except Exception as e:
+        logger.critical(f"Критическая ошибка при запуске: {e}")
+        QMessageBox.critical(None, 'Критическая ошибка', f'Ошибка запуска приложения: {str(e)}')
+        sys.exit(1)
 
 
 if __name__ == '__main__':

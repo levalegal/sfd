@@ -1,6 +1,9 @@
 import sqlite3
 import os
 from pathlib import Path
+from app.utils.logger import setup_logger
+
+logger = setup_logger('database')
 
 
 class Database:
@@ -95,4 +98,5 @@ class Database:
         
         conn.commit()
         conn.close()
+        logger.info("База данных инициализирована")
 

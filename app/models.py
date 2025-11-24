@@ -6,6 +6,9 @@ from app.utils.validators import (
     validate_floors_count, validate_room_number, validate_capacity,
     validate_area, ValidationError
 )
+from app.utils.logger import setup_logger
+
+logger = setup_logger('models')
 
 
 class StudentModel:
@@ -34,9 +37,11 @@ class StudentModel:
                   gender, phone.strip(), email.strip() if email else None, group_number.strip()))
             conn.commit()
             student_id = cursor.lastrowid
+            logger.info(f"Создан студент ID: {student_id}")
             return student_id
         except Exception as e:
             conn.rollback()
+            logger.error(f"Ошибка создания студента: {e}")
             raise
         finally:
             conn.close()
