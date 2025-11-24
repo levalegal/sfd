@@ -104,27 +104,58 @@ class StudentsWindow(QWidget):
         self.load_data()
     
     def init_ui(self):
-        self.setWindowTitle('Управление студентами')
-        self.setMinimumSize(900, 600)
+        self.setWindowTitle('👥 Управление студентами')
+        self.setMinimumSize(1000, 650)
         
         layout = QVBoxLayout()
         
         # Поиск
         search_layout = QHBoxLayout()
-        search_label = QLabel('Поиск:')
+        search_label = QLabel('🔍 Поиск:')
+        search_label.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                font-weight: 600;
+                color: #34495e;
+                padding: 5px;
+            }
+        """)
         self.search_edit = QLineEdit()
+        self.search_edit.setObjectName("search")
         self.search_edit.setPlaceholderText('Введите фамилию, имя или группу...')
         self.search_edit.textChanged.connect(self.filter_data)
+        self.search_edit.setStyleSheet("""
+            QLineEdit#search {
+                padding: 12px 16px;
+                font-size: 14px;
+                border: 2px solid #3498db;
+                border-radius: 25px;
+                background-color: white;
+            }
+            QLineEdit#search:focus {
+                border: 2px solid #2980b9;
+                background-color: #f8f9fa;
+            }
+        """)
         search_layout.addWidget(search_label)
         search_layout.addWidget(self.search_edit)
         
         # Кнопки управления
         buttons_layout = QHBoxLayout()
-        self.add_btn = QPushButton('Добавить')
-        self.edit_btn = QPushButton('Редактировать')
-        self.delete_btn = QPushButton('Удалить')
-        self.export_btn = QPushButton('Экспорт в CSV')
-        self.refresh_btn = QPushButton('Обновить')
+        buttons_layout.setSpacing(10)
+        
+        self.add_btn = QPushButton('➕ Добавить')
+        self.edit_btn = QPushButton('✏️ Редактировать')
+        self.delete_btn = QPushButton('🗑️ Удалить')
+        self.export_btn = QPushButton('📥 Экспорт в CSV')
+        self.refresh_btn = QPushButton('🔄 Обновить')
+        
+        # Стили для кнопок
+        self.add_btn.setProperty("class", "action")
+        self.edit_btn.setProperty("class", "action")
+        self.delete_btn.setProperty("class", "danger")
+        self.export_btn.setProperty("class", "action")
+        self.refresh_btn.setProperty("class", "action")
         
         self.add_btn.clicked.connect(self.add_student)
         self.edit_btn.clicked.connect(self.edit_student)
@@ -152,6 +183,18 @@ class StudentsWindow(QWidget):
         
         # Статус
         self.status_label = QLabel('Всего студентов: 0')
+        self.status_label.setObjectName("status")
+        self.status_label.setStyleSheet("""
+            QLabel#status {
+                background-color: #ecf0f1;
+                padding: 10px 16px;
+                border-radius: 6px;
+                color: #34495e;
+                font-size: 13px;
+                font-weight: 600;
+                border-left: 4px solid #3498db;
+            }
+        """)
         
         layout.addLayout(search_layout)
         layout.addLayout(buttons_layout)

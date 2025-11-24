@@ -3,7 +3,7 @@
 Информационная система управления студенческим общежитием
 """
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QStackedWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QStackedWidget, QLabel, QMessageBox
 from PyQt6.QtCore import Qt
 from app.ui.students_window import StudentsWindow
 from app.ui.commandants_window import CommandantsWindow
@@ -23,8 +23,8 @@ class MainWindow(QMainWindow):
         self.init_ui()
     
     def init_ui(self):
-        self.setWindowTitle('Информационная система управления студенческим общежитием')
-        self.setMinimumSize(1200, 700)
+        self.setWindowTitle('🏠 Информационная система управления студенческим общежитием')
+        self.setMinimumSize(1300, 750)
         
         # Центральный виджет
         central_widget = QWidget()
@@ -36,16 +36,41 @@ class MainWindow(QMainWindow):
         
         # Боковая панель с кнопками
         sidebar = QWidget()
-        sidebar.setFixedWidth(200)
+        sidebar.setObjectName("sidebar")
+        sidebar.setFixedWidth(220)
+        sidebar.setStyleSheet("""
+            QWidget#sidebar {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #2c3e50, stop:1 #34495e);
+                border-right: 2px solid #1a252f;
+            }
+        """)
         sidebar_layout = QVBoxLayout()
         sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        sidebar_layout.setSpacing(8)
+        sidebar_layout.setContentsMargins(10, 20, 10, 20)
         
-        self.students_btn = QPushButton('Студенты')
-        self.commandants_btn = QPushButton('Коменданты')
-        self.buildings_btn = QPushButton('Корпуса')
-        self.rooms_btn = QPushButton('Комнаты')
-        self.checkin_btn = QPushButton('Заселения')
-        self.checkout_btn = QPushButton('Выселения')
+        # Заголовок
+        title_label = QLabel('🏠 Общежитие')
+        title_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 10px;
+                background: transparent;
+            }
+        """)
+        sidebar_layout.addWidget(title_label)
+        
+        sidebar_layout.addWidget(QLabel())  # Отступ
+        
+        self.students_btn = QPushButton('👥 Студенты')
+        self.commandants_btn = QPushButton('👮 Коменданты')
+        self.buildings_btn = QPushButton('🏢 Корпуса')
+        self.rooms_btn = QPushButton('🚪 Комнаты')
+        self.checkin_btn = QPushButton('✅ Заселения')
+        self.checkout_btn = QPushButton('❌ Выселения')
         
         self.students_btn.clicked.connect(lambda: self.show_window(0))
         self.commandants_btn.clicked.connect(lambda: self.show_window(1))
