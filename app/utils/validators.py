@@ -2,11 +2,26 @@
 Модуль валидации данных
 """
 import re
+from typing import Optional, Callable
+from functools import wraps
 
 
 class ValidationError(Exception):
     """Исключение для ошибок валидации"""
     pass
+
+
+def validator(func: Callable) -> Callable:
+    """Декоратор для создания валидаторов"""
+    @wraps(func)
+    def wrapper(value, *args, **kwargs):
+        try:
+            return func(value, *args, **kwargs)
+        except ValidationError:
+            raise
+        except Exception as e:
+            raise ValidationError(str(e))
+    return wrapper
 
 
 def validate_phone(phone):

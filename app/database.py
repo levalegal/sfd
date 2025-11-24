@@ -96,7 +96,31 @@ class Database:
             )
         ''')
         
+        # Создание индексов для оптимизации
+        self._create_indexes(conn)
+        
         conn.commit()
         conn.close()
         logger.info("База данных инициализирована")
+    
+    def _create_indexes(self, conn):
+        """Создание индексов для оптимизации запросов"""
+        cursor = conn.cursor()
+        
+        # Индексы для студентов
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_students_surname ON students(surname)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_students_group ON students(group_number)')
+        
+        # Индексы для заселений
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_checkins_student ON checkins(student_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_checkins_room ON checkins(room_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_checkins_date ON checkins(checkin_date)')
+        
+        # Индексы для выселений
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_checkouts_checkin ON checkouts(checkin_id)')
+        
+        # Индексы для комнат
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_rooms_building ON rooms(building_id)')
+        
+        logger.info("Индексы созданы")
 
