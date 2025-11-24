@@ -11,6 +11,7 @@ from app.ui.buildings_window import BuildingsWindow
 from app.ui.rooms_window import RoomsWindow
 from app.ui.checkin_window import CheckinWindow
 from app.ui.checkout_window import CheckoutWindow
+from app.ui.dashboard_window import DashboardWindow
 from app.utils.styles import APP_STYLE
 from app.utils.logger import setup_logger
 
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
         
         sidebar_layout.addWidget(QLabel())  # Отступ
         
+        self.dashboard_btn = QPushButton('📊 Панель управления')
         self.students_btn = QPushButton('👥 Студенты')
         self.commandants_btn = QPushButton('👮 Коменданты')
         self.buildings_btn = QPushButton('🏢 Корпуса')
@@ -72,13 +74,15 @@ class MainWindow(QMainWindow):
         self.checkin_btn = QPushButton('✅ Заселения')
         self.checkout_btn = QPushButton('❌ Выселения')
         
-        self.students_btn.clicked.connect(lambda: self.show_window(0))
-        self.commandants_btn.clicked.connect(lambda: self.show_window(1))
-        self.buildings_btn.clicked.connect(lambda: self.show_window(2))
-        self.rooms_btn.clicked.connect(lambda: self.show_window(3))
-        self.checkin_btn.clicked.connect(lambda: self.show_window(4))
-        self.checkout_btn.clicked.connect(lambda: self.show_window(5))
+        self.dashboard_btn.clicked.connect(lambda: self.show_window(0))
+        self.students_btn.clicked.connect(lambda: self.show_window(1))
+        self.commandants_btn.clicked.connect(lambda: self.show_window(2))
+        self.buildings_btn.clicked.connect(lambda: self.show_window(3))
+        self.rooms_btn.clicked.connect(lambda: self.show_window(4))
+        self.checkin_btn.clicked.connect(lambda: self.show_window(5))
+        self.checkout_btn.clicked.connect(lambda: self.show_window(6))
         
+        sidebar_layout.addWidget(self.dashboard_btn)
         sidebar_layout.addWidget(self.students_btn)
         sidebar_layout.addWidget(self.commandants_btn)
         sidebar_layout.addWidget(self.buildings_btn)
@@ -93,6 +97,7 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         
         # Создание окон
+        self.dashboard_window = DashboardWindow()
         self.students_window = StudentsWindow()
         self.commandants_window = CommandantsWindow()
         self.buildings_window = BuildingsWindow()
@@ -100,6 +105,7 @@ class MainWindow(QMainWindow):
         self.checkin_window = CheckinWindow()
         self.checkout_window = CheckoutWindow()
         
+        self.stacked_widget.addWidget(self.dashboard_window)
         self.stacked_widget.addWidget(self.students_window)
         self.stacked_widget.addWidget(self.commandants_window)
         self.stacked_widget.addWidget(self.buildings_window)
@@ -118,16 +124,18 @@ class MainWindow(QMainWindow):
         
         # Обновить данные при переключении
         if index == 0:
-            self.students_window.load_data()
+            self.dashboard_window.load_statistics()
         elif index == 1:
-            self.commandants_window.load_data()
+            self.students_window.load_data()
         elif index == 2:
-            self.buildings_window.load_data()
+            self.commandants_window.load_data()
         elif index == 3:
-            self.rooms_window.load_data()
+            self.buildings_window.load_data()
         elif index == 4:
-            self.checkin_window.load_data()
+            self.rooms_window.load_data()
         elif index == 5:
+            self.checkin_window.load_data()
+        elif index == 6:
             self.checkout_window.load_data()
 
 
