@@ -27,6 +27,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('🏠 Информационная система управления студенческим общежитием')
         self.setMinimumSize(1300, 750)
         
+        # Настройки для полноэкранного режима
+        from PyQt6.QtCore import Qt as QtCore
+        self.setWindowState(QtCore.WindowState.WindowMaximized)
+        
         # Центральный виджет
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -146,7 +150,9 @@ def main():
         
         logger.info("Запуск приложения")
         window = MainWindow()
-        window.show()
+        
+        # Открыть на весь экран
+        window.showMaximized()
         
         logger.info("Приложение успешно запущено")
         sys.exit(app.exec())
